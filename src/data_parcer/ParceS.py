@@ -45,8 +45,10 @@ class ForklogPars(BaseParser):
         soup = bs4.BeautifulSoup(text, features='html.parser')
         news_head = soup.find_all('div', class_='text_blk')
         all_text = [t.text.strip().split('\n')[0] for t in news_head]
-        tranliterate_text = list(map(lambda x: translit(x.lower(), 'ru', reversed=True).replace(' ', '-'), all_text))
-        return tranliterate_text
+        trans_table = {ord(':'): None, ord('«'): None, ord('»'): None, ord(' '): '-'}
+        tranliterate_text = list(map(lambda x: translit(x.lower(), 'ru', reversed=True).translate(trans_table), all_text))
+        all_href_parse = list(map(lambda x: self.base_url + '/' + x.replace('ija', 'iya'), tranliterate_text)) # write parsing tests for these links
+        return all_href_parse
 
 
 
