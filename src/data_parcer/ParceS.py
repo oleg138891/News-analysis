@@ -83,7 +83,25 @@ class CoDePars(BaseParser):
         all_href_parse = [self.data_url + t['href'] for t in articles_2]
         return all_href_parse
 
+class CryptoNewsParse(BaseParser):
+    def parse_s(self, payload: str, headers: str) -> set[str]:  # change (payload, headers) on class variables or object variables
+        """Target resource parsing method.
+
+        Args:
+            payload (str): Payloads.
+            headers (str): Headers.
+
+        Returns:
+            all_data (set[str]): link to each article
+        """
+        response = requests.request("GET", self.base_url, data=payload, headers=headers)
+        text = response.text
+        soup = bs4.BeautifulSoup(text, features='html.parser')
+        articles_2 = soup.find_all('a', class_="title", string=True)
+        all_data = [self.base_url+t['href'] for t in articles_2]
+        return all_data
 
 
 Fork_p = ForklogPars('https://forklog.com/news')
 CoDe_p = CoDePars('https://www.coindesk.com/livewire/', 'https://www.coindesk.com')
+Cr_news = CryptoNewsParse('https://cryptonews.net')
