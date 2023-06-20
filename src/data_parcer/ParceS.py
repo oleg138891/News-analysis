@@ -15,24 +15,25 @@ class BaseParser:
         """
         self.base_url = base_url
 
-    def parse_s(self, payload: str, headers: str):  # change (payload, headers) on class variables or object variables
+    def parse_href(self, payload: str, headers: str, url: str):  # change (payload, headers) on class variables or object variables
         """Target resource parsing method.
 
         Args:
             payload (str): Payloads.
             headers (str): Headers.
+            url (str): URL to parce.
 
         Returns:
-            None
+            None ### change no None
         """
-        response = requests.request("GET", self.base_url, data=payload, headers=headers)
+        response = requests.request("GET", url, data=payload, headers=headers)
         text = response.text
         soup = bs4.BeautifulSoup(text, features='html.parser')
         return soup
 
 
 class ForklogPars(BaseParser):
-    def parse_s(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
+    def custom_parse_href(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
         """Target resource parsing method.
 
         Args:
@@ -42,9 +43,7 @@ class ForklogPars(BaseParser):
         Returns:
             all_href_parse (list[str]): link to each article
         """
-        response = requests.request("GET", self.base_url, data=payload, headers=headers)
-        text = response.text
-        soup = bs4.BeautifulSoup(text, features='html.parser')
+        soup = self.parse_href(url=self.base_url, payload=payload, headers=headers)
         news_head = soup.find_all('div', class_='text_blk')
         all_text = [t.text.strip().split('\n')[0] for t in news_head]
         trans_table = {ord(':'): None, ord('«'): None, ord('»'): None, ord(' '): '-'}
@@ -58,7 +57,7 @@ class CoDePars(BaseParser):
 
         Args:
             base_url (str): base domain for parsing.
-            data_url (str): url for artickle concatnate
+            data_url (str): Url for artickle concatnate.
 
         Returns:
             None
@@ -66,7 +65,7 @@ class CoDePars(BaseParser):
         super().__init__(base_url)
         self.data_url = data_url
 
-    def parse_s(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
+    def custom_parse_href(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
         """Target resource parsing method.
 
         Args:
@@ -76,15 +75,13 @@ class CoDePars(BaseParser):
         Returns:
             all_href_parse (list[str]): link to each article
         """
-        response = requests.request("GET", self.base_url, data=payload, headers=headers)
-        text = response.text
-        soup = bs4.BeautifulSoup(text, features='html.parser')
+        soup = self.parse_href(url=self.base_url, payload=payload, headers=headers)
         articles_2 = soup.find_all('a', class_="headline__HeadlineLink-sc-1uoawmp-0 jbDMkW")
         all_href_parse = [self.data_url + t['href'] for t in articles_2]
         return all_href_parse
 
 class CryptoNewsParse(BaseParser):
-    def parse_s(self, payload: str, headers: str) -> set[str]:  # change (payload, headers) on class variables or object variables
+    def custom_parse_href(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
         """Target resource parsing method.
 
         Args:
@@ -92,14 +89,32 @@ class CryptoNewsParse(BaseParser):
             headers (str): Headers.
 
         Returns:
-            all_data (set[str]): link to each article
+            all_data (list[str]): link to each article
         """
-        response = requests.request("GET", self.base_url, data=payload, headers=headers)
-        text = response.text
-        soup = bs4.BeautifulSoup(text, features='html.parser')
+        soup = self.parse_href(url=self.base_url, payload=payload, headers=headers)
         articles_2 = soup.find_all('a', class_="title", string=True)
         all_data = [self.base_url+t['href'] for t in articles_2]
         return all_data
+
+    def parce_artickle(self, href_list: list[str], payload: str, headers: str) -> list[str]:
+        """parsing articles on the site.
+
+        Args:
+            href_list (str): All links for parsing.
+            payload (str): Payloads.
+            headers (str): Headers.
+
+        Returns:
+            all_text (list[str]): text of all articles
+
+        """
+        res = []
+        for href in href_list:
+            soup = self.parse_href(url=href, payload=payload, headers=headers)
+            article = soup.find_all('div', class_="cn-content")
+            res.append(article[0].text)
+        return res
+
 
 
 Fork_p = ForklogPars('https://forklog.com/news')
