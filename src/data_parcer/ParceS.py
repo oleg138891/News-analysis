@@ -80,6 +80,26 @@ class CoDePars(BaseParser):
         all_href_parse = [self.data_url + t['href'] for t in articles_2]
         return all_href_parse
 
+    def parce_artickle(self, href_list: list[str], payload: str, headers: str) -> list[str]:
+        """parsing articles on the site.
+
+        Args:
+            href_list (str): All links for parsing.
+            payload (str): Payloads.
+            headers (str): Headers.
+
+        Returns:
+            all_text (list[str]): text of all articles
+
+        """
+        res = []
+        for href in href_list:
+            soup = self.parse_href(url=href, payload=payload, headers=headers)
+            article = soup.find_all('div', class_="common-textstyles__StyledWrapper-sc-18pd49k-0 eSbCkN")
+            article = [i.text for i in article if not i.find(lambda tag: tag.name == 'a' and tag.get('target') == '_blank')]
+            res.append(' '.join(article))
+        return res
+
 class CryptoNewsParse(BaseParser):
     def custom_parse_href(self, payload: str, headers: str) -> list[str]:  # change (payload, headers) on class variables or object variables
         """Target resource parsing method.
@@ -113,9 +133,11 @@ class CryptoNewsParse(BaseParser):
             soup = self.parse_href(url=href, payload=payload, headers=headers)
             article = soup.find_all('div', class_="cn-content")
             res.append(article[0].text)
+            try:
+                res.append(article[0].text)
+            except IndexError:
+                continue
         return res
-
-
 
 Fork_p = ForklogPars('https://forklog.com/news')
 CoDe_p = CoDePars('https://www.coindesk.com/livewire/', 'https://www.coindesk.com')
